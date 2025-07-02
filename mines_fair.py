@@ -1,4 +1,4 @@
- import hmac
+import hmac
 import hashlib
 
 def get_random_floats(server_seed, client_seed, nonce, count):
