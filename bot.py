@@ -1,23 +1,25 @@
-from telegram.ext import Updater, CommandHandler
+import os
+from telegram import Update, InputFile
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from mines_fair import get_mine_positions
 from generate_image import create_mines_image
 from auth import is_vip
 from tracker import update_accuracy, get_accuracy
 
-TOKEN = "7840887285:AAEYjOZSSrcM55cT6mcivXOrozlWfucgS1s"  # Replace this
+TOKEN = os.getenv("7840887285:AAEYjOZSSrcM55cT6mcivXOrozlWfucgS1s") or "7840887285:AAEYjOZSSrcM55cT6mcivXOrozlWfucgS1s"  # Replace with your token if not using env var
 
-def check_mines(update, context):
+async def check_mines(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     if not is_vip(user_id):
-        update.message.reply_text("🚫 Access Denied. VIPs only.")
+        await update.message.reply_text("🚫 Access Denied. VIPs only.")
+        return
+
+    args = context.args
+    if len(args) < 3:
+        await update.message.reply_text("Usage: /check server_seed client_seed nonce")
         return
 
     try:
-        args = context.args
-        if len(args) < 3:
-            update.message.reply_text("Usage: /check server_seed client_seed nonce")
-            return
-
         server_seed = args[0]
         client_seed = args[1]
         nonce = int(args[2])
@@ -36,18 +38,16 @@ def check_mines(update, context):
         )
 
         image_path = create_mines_image(mines)
-        update.message.reply_text(msg)
-        update.message.reply_photo(photo=open(image_path, "rb"))
+        await update.message.reply_text(msg)
+        await update.message.reply_photo(photo=InputFile(image_path))
 
     except Exception as e:
-        update.message.reply_text(f"Error: {e}")
+        await update.message.reply_text(f"❌ Error: {e}")
 
 def main():
-    updater = Updater(TOKEN)
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("check", check_mines))
-    updater.start_polling()
-    updater.idle()
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("check", check_mines))
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
