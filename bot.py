@@ -21,8 +21,8 @@ async def check_mines(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         server_seed = args[0]
-        client_seed = args[1]
-        nonce = int(args[2])
+        #client_seed = args[1]
+        #nonce = int(args[2])
 
         mines = get_mine_positions(server_seed, client_seed, nonce, mine_count=5)
         safe = [i for i in range(1, 26) if i not in mines]
